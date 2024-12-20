@@ -93,8 +93,9 @@ for t in text_parts:
             json.dump(res, f, indent=2)
         print(e)
         sys.exit('ValueErrorが発生しています。入力が長すぎるかもしれません。translate関数のlength limitを変更することを検討してください。')
-    with open('sbj/'+fnDecorate+'.log','a') as f:
-        f.write(res)
+    finally:
+        with open('sbj/'+fnDecorate+'.log','a') as f:
+            f.write(res)
 
 # 翻訳結果をファイルに保存
 file_name = 'sbj/'+fnDecorate+'_translated.txt'
