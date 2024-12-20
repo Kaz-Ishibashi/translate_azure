@@ -50,9 +50,9 @@ def translate(text, fn = 'default'):
         # f.write(fixed_text)
         json.dump(response, f, ensure_ascii=False, indent=4)
 
-# def insert_space_after_hash(text):
-#     # 正規表現で '\n#' の後に空白以外の文字が来る部分を見つけて、空白を挿入
-#     return re.sub(r'(\n#)(\S)', r'\1 \2', text)
+def insert_space_after_hash(text):
+    # 正規表現で '\n#' の後に空白以外の文字が来る部分を見つけて、空白を挿入
+    return re.sub(r'(\n#)(\S)', r'\1 \2', text)
 
 # ファイルを読み込んで翻訳
 fnDecorate = sys.argv[1]

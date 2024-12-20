@@ -84,6 +84,7 @@ text_parts = split_text_limitation(text)
 responses = []
 trans_sentence = ''
 
+# 必要ならファイルを分割して処理する。エラー吐いたらそれ以上Azureにはアクセスしない。
 for t in text_parts:
     res = translate(t)
     try:
