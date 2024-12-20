@@ -8,11 +8,12 @@ import json
 # APIキーを指定
 KEY = os.getenv('AZURE_TRANSLATOR_API_KEY')
 
-def translate(text, fn = 'default'):
+def translate(text):
     """テキストをAzure AI Translator APIにより翻訳する
     Args:
         text (str): 翻訳対象のテキスト
-        fn (str): 出力ファイル名から拡張子を除いたもの
+    Returns:
+        str: APIからの戻り値（JSON）
     """
     # APIエンドポイントを指定
     endpoint = "https://api.cognitive.microsofttranslator.com/"
@@ -41,23 +42,21 @@ def translate(text, fn = 'default'):
 
     # リクエストを送信して戻り値のJSONを取得
     request = requests.post(constructed_url, params=params, headers=headers, json=body)
-    response = request.json()
+    return request.json()
 
-    # 翻訳結果をファイルに保存
-    file_name = 'sbj/'+fn+'_translated.txt'
-    with open(file_name, 'w', encoding='Shift-JIS') as f:
-        try:
-            fixed_text = insert_space_after_hash(response[0]['translations'][0]['text'])
-            f.write(fixed_text)
-        except:
-            json.dump(response, f, indent=2)
 
 def insert_space_after_hash(text):
-    # 正規表現で '\n#' の後に空白以外の文字が来る部分を見つけて、空白を挿入
+    """
+    テキスト内の '\n#' の後に空白以外の文字が来る部分を見つけて、空白を挿入する関数
+    Args:
+        text (str): 処理対象のテキスト
+    Returns:
+        str: 空白が挿入されたテキスト
+    """
     return re.sub(r'(\n#)(\S)', r'\1 \2', text)
 
 def split_text_limitation(text, max_length=30000):
-    """テキストを指定文字数で分割する
+    """テキストを指定文字数くらいの改行文字で分割する
     Args:
         text (str): 分割対象のテキスト
         max_length (int): 分割する文字数
@@ -82,6 +81,23 @@ with open(sourcefile, 'r',encoding='UTF-8') as f:
     text = f.read()
 
 text_parts = split_text_limitation(text)
+responses = []
+trans_sentence = ''
 
 for t in text_parts:
-    translate(text, fnDecorate)
+    res = translate(t)
+    try:
+        trans_sentence = trans_sentence + res[0]['translations'][0]['text']
+    except ValueError as e:
+        with open('sbj/'+fnDecorate+'.json', 'w') as f:
+            json.dump(res, f, indent=2)
+        print(e)
+        sys.exit('ValueErrorが発生しています。入力が長すぎるかもしれません。translate関数のlength limitを変更することを検討してください。')
+    with open('sbj/'+fnDecorate+'.log','a') as f:
+        f.write(res)
+
+# 翻訳結果をファイルに保存
+file_name = 'sbj/'+fnDecorate+'_translated.txt'
+with open(file_name, 'w', encoding='Shift-JIS') as f:
+    fixed_text = insert_space_after_hash(trans_sentence)
+    f.write(fixed_text)
