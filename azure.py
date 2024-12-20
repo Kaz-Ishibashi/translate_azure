@@ -66,11 +66,14 @@ def split_text_limitation(text, max_length=30000):
     """
     parts = []
     current_part = ''
-    current_length = 0
 
     for line in text.splitlines(True):
+        if (len(current_part) + len(line)) > max_length:
+            parts.append(current_part)
+            current_part = ''
+        current_part = current_part + line
 
-
+    return parts
 
 # ファイルを読み込んで翻訳
 fnDecorate = sys.argv[1]
@@ -78,5 +81,7 @@ sourcefile = 'sbj/'+fnDecorate+'.txt'
 with open(sourcefile, 'r',encoding='UTF-8') as f:
     text = f.read()
 
-print(len(text))
-# translate(text, fnDecorate)
+text_parts = split_text_limitation(text)
+
+for t in text_parts:
+    translate(text, fnDecorate)
