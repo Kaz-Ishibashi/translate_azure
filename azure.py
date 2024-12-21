@@ -72,6 +72,9 @@ def split_text_limitation(text, max_length=30000):
             current_part = ''
         current_part = current_part + line
 
+    if current_part:
+        parts.append(current_part)
+
     return parts
 
 # ファイルを読み込んで翻訳
@@ -89,6 +92,7 @@ for t in text_parts:
     res = translate(t)
     try:
         trans_sentence = trans_sentence + res[0]['translations'][0]['text']
+        print('try_block finished')
     except ValueError as e:
         with open('sbj/'+fnDecorate+'.json', 'w') as f:
             json.dump(res, f, indent=2)
@@ -96,10 +100,14 @@ for t in text_parts:
         sys.exit('ValueErrorが発生しています。入力が長すぎるかもしれません。translate関数のlength limitを変更することを検討してください。')
     finally:
         with open('sbj/'+fnDecorate+'.log','a') as f:
-            f.write(res)
+            f.write(json.dumps(res, ensure_ascii=False)+'\n')
+
+        print('output_log finished')
 
 # 翻訳結果をファイルに保存
 file_name = 'sbj/'+fnDecorate+'_translated.txt'
 with open(file_name, 'w', encoding='Shift-JIS') as f:
     fixed_text = insert_space_after_hash(trans_sentence)
     f.write(fixed_text)
+
+print('output_txt finished')
