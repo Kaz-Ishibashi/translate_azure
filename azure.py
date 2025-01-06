@@ -1,9 +1,11 @@
 import os
 import sys
 import re
+import time
 import requests
 import uuid
 import json
+from tqdm import tqdm
 
 # APIキーを指定
 KEY = os.getenv('AZURE_TRANSLATOR_API_KEY')
@@ -55,7 +57,7 @@ def insert_space_after_hash(text):
     """
     return re.sub(r'(\n#)(\S)', r'\1 \2', text)
 
-def split_text_limitation(text, max_length=30000):
+def split_text_limitation(text, max_length=20000):
     """テキストを指定文字数くらいの改行文字で分割する
     Args:
         text (str): 分割対象のテキスト
@@ -87,26 +89,37 @@ text_parts = split_text_limitation(text)
 responses = []
 trans_sentence = ''
 
+print('Start translation.')
+# print(f'{len(text_parts)} parts found. This operation will take about ')
+
+loop_ctr = 0
 # 必要ならファイルを分割して処理する。エラー吐いたらそれ以上Azureにはアクセスしない。
 for t in text_parts:
+    loop_ctr += 1
     res = translate(t)
     try:
         trans_sentence = trans_sentence + res[0]['translations'][0]['text']
         print('try_block finished')
     except ValueError as e:
-        with open('sbj/'+fnDecorate+'.json', 'w') as f:
+        with open('sbj/'+fnDecorate+'.json', 'w', errors='replace') as f:
             json.dump(res, f, indent=2)
         print(e)
         sys.exit('ValueErrorが発生しています。入力が長すぎるかもしれません。translate関数のlength limitを変更することを検討してください。')
     finally:
-        with open('sbj/'+fnDecorate+'.log','a') as f:
+        with open('sbj/'+fnDecorate+'.log','a', errors='ignore') as f:
             f.write(json.dumps(res, ensure_ascii=False)+'\n')
 
         print('output_log finished')
 
+    if loop_ctr != len(text_parts):
+        print("Sleeping for 20 seconds", end='')
+        for _ in tqdm(range(1200), desc="Sleeping", ncols=100):
+            time.sleep(0.05)
+        print('Go to next loop.')
+
 # 翻訳結果をファイルに保存
 file_name = 'sbj/'+fnDecorate+'_translated.txt'
-with open(file_name, 'w', encoding='Shift-JIS') as f:
+with open(file_name, 'w', encoding='Shift-JIS', errors='replace') as f:
     fixed_text = insert_space_after_hash(trans_sentence)
     f.write(fixed_text)
 
